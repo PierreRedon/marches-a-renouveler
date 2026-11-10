@@ -1,0 +1,496 @@
+{
+ "genere_le": "2026-11-10T19:36:41Z",
+ "lignes": 3381902,
+ "colonnes": [
+  {
+   "nom": "uid",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "id",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "nature",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "acheteur_id",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "acheteur_nom",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "titulaire_id",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "titulaire_typeIdentifiant",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "titulaire_nom",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "objet",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "montant",
+   "type": "DOUBLE"
+  },
+  {
+   "nom": "type",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "codeCPV",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "procedure",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "techniques",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "dureeMois",
+   "type": "SMALLINT"
+  },
+  {
+   "nom": "dureeRestanteMois",
+   "type": "DOUBLE"
+  },
+  {
+   "nom": "offresRecues",
+   "type": "SMALLINT"
+  },
+  {
+   "nom": "dateNotification",
+   "type": "DATE"
+  },
+  {
+   "nom": "datePublicationDonnees",
+   "type": "DATE"
+  },
+  {
+   "nom": "formePrix",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "typesPrix",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "attributionAvance",
+   "type": "BOOLEAN"
+  },
+  {
+   "nom": "tauxAvance",
+   "type": "FLOAT"
+  },
+  {
+   "nom": "marcheInnovant",
+   "type": "BOOLEAN"
+  },
+  {
+   "nom": "modalitesExecution",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "considerationsSociales",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "considerationsEnvironnementales",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "ccag",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "sousTraitanceDeclaree",
+   "type": "BOOLEAN"
+  },
+  {
+   "nom": "typeGroupementOperateurs",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "origineUE",
+   "type": "FLOAT"
+  },
+  {
+   "nom": "origineFrance",
+   "type": "FLOAT"
+  },
+  {
+   "nom": "lieuExecution_code",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "lieuExecution_typeCode",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "idAccordCadre",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "titulaire_distance",
+   "type": "SMALLINT"
+  },
+  {
+   "nom": "acheteur_categorie",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "acheteur_labels",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "acheteur_commune_code",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "acheteur_commune_nom",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "acheteur_departement_code",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "acheteur_departement_nom",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "acheteur_region_code",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "acheteur_region_nom",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "acheteur_latitude",
+   "type": "DOUBLE"
+  },
+  {
+   "nom": "acheteur_longitude",
+   "type": "DOUBLE"
+  },
+  {
+   "nom": "acheteur_population",
+   "type": "INTEGER"
+  },
+  {
+   "nom": "titulaire_categorie",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "titulaire_labels",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "titulaire_activite_code",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "titulaire_activite_libelle",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "titulaire_commune_code",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "titulaire_commune_nom",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "titulaire_departement_code",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "titulaire_departement_nom",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "titulaire_region_code",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "titulaire_region_nom",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "titulaire_latitude",
+   "type": "DOUBLE"
+  },
+  {
+   "nom": "titulaire_longitude",
+   "type": "DOUBLE"
+  },
+  {
+   "nom": "modification_id",
+   "type": "SMALLINT"
+  },
+  {
+   "nom": "donneesActuelles",
+   "type": "BOOLEAN"
+  },
+  {
+   "nom": "montant_rationalise",
+   "type": "DOUBLE"
+  },
+  {
+   "nom": "montant_anomalie",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "montant_anomalie_raisons",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "sourceDataset",
+   "type": "VARCHAR"
+  },
+  {
+   "nom": "sourceFile",
+   "type": "VARCHAR"
+  }
+ ],
+ "correspondance": {
+  "uid": "uid",
+  "objet": "objet",
+  "nature": "nature",
+  "cpv": "codeCPV",
+  "montant": "montant",
+  "date_notif": "dateNotification",
+  "duree": "dureeMois",
+  "acheteur_nom": "acheteur_nom",
+  "acheteur_dep": "acheteur_departement_code",
+  "tit_nom": "titulaire_nom",
+  "tit_id": "titulaire_id",
+  "tit_cat": "titulaire_categorie",
+  "actuel": "donneesActuelles"
+ },
+ "colonnes_requises_manquantes": [],
+ "echantillon": [
+  [
+   "217500016000192026S10662_79300000",
+   "2026S10662",
+   "Marché",
+   "21750001600019",
+   "Ville de Paris (Mairie)",
+   "45265113600031",
+   "SIRET",
+   "RES Publica",
+   "Prestation de mise en oeuvre et d’animation d’une conférence de locataires du parc social dans le cadre de l’élaboration",
+   "54590.0",
+   "Services",
+   "79300000",
+   "Appel d'offres ouvert",
+   "Sans objet",
+   "6",
+   "6.0",
+   "4",
+   "2026-11-07",
+   "2026-11-08",
+   "Unitaire",
+   "Définitif ferme",
+   "True",
+   "0.30000001192092896",
+   "False",
+   "Marchés subséquents",
+   "Sans objet",
+   "Sans objet",
+   "Prestations intellectuelles",
+   "False",
+   "Pas de groupement",
+   null,
+   null,
+   "75",
+   "Code département",
+   null,
+   "5",
+   "Commune",
+   "Qualiopi",
+   "75104",
+   "Paris 4e Arrondissement",
+   "75",
+   "Paris",
+   "11",
+   "Île-de-France",
+   "48.856145",
+   "2.351838",
+   "2149216",
+   "PME",
+   null,
+   "70.22Z",
+   "Conseil pour les affaires et autres conseils de gestion",
+   "94003",
+   "Arcueil",
+   "94",
+   "Val-de-Marne",
+   "11",
+   "Île-de-France",
+   "48.810096",
+   "2.330622",
+   "0",
+   "True",
+   "54590.0",
+   null,
+   null,
+   "atexo_maximilien",
+   "https://www.data.gouv.fr/datasets/67272093922b37b9b2f1b653/#/resources/194d55a3-654a-48ee-ac19-62d6589e4e3a"
+  ],
+  [
+   "086180387000101846499_71240000",
+   "1846499",
+   "Marché",
+   "08618038700010",
+   "Valloire Habitat",
+   null,
+   null,
+   null,
+   "Maîtrise d’œuvre pour la réhabilitation de 151 logements collectifs sur les communes de Chalette sur Loing et Montargis ",
+   "309550.0",
+   "Services",
+   "71240000",
+   "Appel d'offres ouvert",
+   "Sans objet",
+   "48",
+   "48.0",
+   "12",
+   "2026-11-06",
+   "2026-11-06",
+   "Forfaitaire",
+   "Définitif ferme",
+   "False",
+   null,
+   "False",
+   "Sans objet",
+   "Sans objet",
+   "Sans objet",
+   "Sans objet",
+   "False",
+   "Pas de groupement",
+   "0.0",
+   "0.0",
+   "45",
+   "Code département",
+   null,
+   null,
+   null,
+   null,
+   "45234",
+   "Orléans",
+   "45",
+   "Loiret",
+   "24",
+   "Centre-Val de Loire",
+   "47.905333",
+   "1.899088",
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   "0",
+   "True",
+   "309550.0",
+   null,
+   null,
+   "aws_marches-publics.info",
+   "https://www.data.gouv.fr/datasets/65cf11893fda573b53b19f52/#/resources/b8b51628-903f-44b4-b440-f54ae218a5fb"
+  ],
+  [
+   "086180387000101869860_79824000",
+   "1869860",
+   "Marché",
+   "08618038700010",
+   "Valloire Habitat",
+   null,
+   null,
+   null,
+   "Prestation d’édition et de mise sous pli des avis d’échéance, des décomptes individuels de charges et des enquêtes oblig",
+   "150000.0",
+   "Services",
+   "79824000",
+   "Procédure adaptée",
+   "Sans objet",
+   "48",
+   "48.0",
+   "7",
+   "2026-11-06",
+   "2026-11-06",
+   "Unitaire",
+   "Définitif ferme",
+   "False",
+   null,
+   "False",
+   "Sans objet",
+   "Sans objet",
+   "Sans objet",
+   "Sans objet",
+   "False",
+   "Pas de groupement",
+   "0.0",
+   "0.0",
+   "45000",
+   "Code postal",
+   null,
+   null,
+   null,
+   null,
+   "45234",
+   "Orléans",
+   "45",
+   "Loiret",
+   "24",
+   "Centre-Val de Loire",
+   "47.905333",
+   "1.899088",
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   "0",
+   "True",
+   "150000.0",
+   null,
+   null,
+   "aws_marches-publics.info",
+   "https://www.data.gouv.fr/datasets/65cf11893fda573b53b19f52/#/resources/b8b51628-903f-44b4-b440-f54ae218a5fb"
+  ]
+ ],
+ "site": {
+  "pages": 807,
+  "echeances": 63227
+ }
+}
