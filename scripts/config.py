@@ -5,9 +5,9 @@ SITE = {
     "baseline": "Les marchés publics attribués et ceux qui arrivent à échéance, par métier et par département.",
     "url": "https://www.marches-a-renouveler.fr",
     "lignes_gratuites": 5,
-    "prix": "19 € HT",
-    # slug du métier -> lien de paiement. Vide tant que le compte de paiement n'existe pas.
-    "liens_paiement": {},
+    "prix": "29 € HT",
+    # Lien de paiement unique (pack de toutes les listes). Vide tant que le compte de paiement n'existe pas.
+    "lien_paiement": "",
     "editeur": {
         "nom": "Pierre Redon",
         "statut": "entrepreneur individuel",

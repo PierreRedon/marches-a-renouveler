@@ -7,6 +7,7 @@ Licence Ouverte 2.0. Le script inspecte le schéma du fichier, écrit un rapport
 une page par département et les pages d'accueil.
 """
 import argparse
+import csv
 import datetime as dt
 import html
 import json
@@ -373,18 +374,20 @@ def main():
                          f'<span class="pill">{fr_month(r[7])}</span>'] for r in free], "ech")
         else:
             t1 = '<p class="empty">Aucune échéance estimée dans les 18 mois d\'après les données publiées.</p>'
-        pay = SITE["liens_paiement"].get(ms)
+        pay = SITE.get("lien_paiement")
         more = ""
         if reste > 0:
             if pay:
-                cta = f'<a class="btn" href="{esc(pay)}">Obtenir la liste complète · {esc(SITE["prix"])}</a>'
+                cta = f'<a class="btn" href="{esc(pay)}" rel="nofollow">Obtenir toutes les listes · {esc(SITE["prix"])}</a>'
             else:
-                cta = '<span class="soon">Liste complète bientôt disponible</span>'
+                cta = '<span class="soon">Listes complètes bientôt disponibles</span>'
             verbe = "arrivent" if reste > 1 else "arrive"
             more = (f'<aside class="lock"><div><strong>{nb(reste)} autre{pl(reste)} marché{pl(reste)} '
                     f'{esc(de(nmet))} {verbe} à échéance {esc(lieu)}.</strong>'
-                    "<p>La liste complète donne pour chacun l'acheteur, le titulaire en place, le montant "
-                    f"et l'échéance estimée.</p></div>{cta}</aside>")
+                    "<p>Le pack donne toutes les échéances de tous les métiers et de tous les départements, "
+                    "en fichiers à ouvrir dans Excel : acheteur, titulaire en place, montant, échéance estimée. "
+                    "Paiement unique, fichiers mis à jour chaque jour.</p></div>"
+                    f"{cta}</aside>")
         t2 = table(["Objet du marché", "Acheteur", "Titulaire", "Montant", "Notifié le"],
                    [[esc(short(r[1])), esc(r[2]), esc(titulaires_txt(r[3])), euro(r[4]), fr_date(r[5])] for r in lst[:20]])
         li_tit = "".join(f"<li><span>{esc(n)}</span><b>{c}</b></li>" for n, c in top_tit)
@@ -601,10 +604,41 @@ def main():
           '<p class="actions"><a class="btn" href="/">Retour à l\'accueil</a></p></div></section>')
     write(out, "/404.html", page("Page introuvable | " + SITE["name"], "Page introuvable.", nf, "/404.html", robots="noindex"))
 
+    # ---------- fichiers payants (chemin secret, hors plan du site) ----------
+    token = re.sub(r"[^A-Za-z0-9]", "", os.environ.get("LIST_TOKEN", ""))
+    if len(token) >= 24:
+        base_acces = f"/acces/{token}/"
+        liens = ""
+        for met in METIERS:
+            ms = met["slug"]
+            if ms not in deps_of:
+                continue
+            full = os.path.join(out, base_acces.strip("/"), f"{ms}.csv")
+            os.makedirs(os.path.dirname(full), exist_ok=True)
+            n = 0
+            with open(full, "w", encoding="utf-8-sig", newline="") as f:
+                w = csv.writer(f, delimiter=";")
+                w.writerow(["Département", "Nom du département", "Objet du marché", "Acheteur", "Titulaire(s)",
+                            "Montant (€)", "Date de notification", "Durée (mois)", "Échéance estimée"])
+                for dep in sorted(deps_of[ms]):
+                    for r in data[(ms, dep)]["a_venir"]:
+                        w.writerow([dep, DEPARTEMENTS[dep], short(r[1], 400), r[2] or "", r[3] or "",
+                                    "" if not r[4] or r[4] <= 0 else round(r[4]), fr_date(r[5]), r[6],
+                                    r[7].strftime("%d/%m/%Y")])
+                        n += 1
+            liens += (f'<a class="card" href="{ms}.csv" download><strong>{esc(met["nom"])}</strong>'
+                      f"<span><b>{nb(n)}</b> échéances · fichier CSV pour Excel</span></a>")
+        acces = f"""<section class="hero small"><div class="wrap"><h1>Vos listes complètes</h1>
+<p class="lead">Merci pour votre achat. Gardez l'adresse de cette page : les fichiers y sont mis à jour chaque jour. Dernière mise à jour : {fr_date(TODAY)}.</p></div></section>
+<div class="wrap"><section><h2>Téléchargez un fichier par métier</h2><div class="cards">{liens}</div></section>
+<section class="note"><h2>À savoir</h2><p>Chaque fichier contient tous les départements : filtrez la première colonne dans Excel. Les échéances sont des estimations, voir <a href="/methode/">la méthode</a>. Un problème ? Écrivez à {esc(SITE['editeur']['contact'])}.</p></section></div>"""
+        write(out, base_acces, page("Vos listes complètes | " + SITE["name"], "Accès aux listes complètes.",
+                                    acces, base_acces, robots="noindex,nofollow"))
+
     sm = "".join(f"<url><loc>{esc(BASE + u)}</loc><lastmod>{TODAY.isoformat()}</lastmod></url>" for u in urls)
     write(out, "/sitemap.xml", '<?xml version="1.0" encoding="UTF-8"?>'
           f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{sm}</urlset>')
-    write(out, "/robots.txt", f"User-agent: *\nAllow: /\nSitemap: {BASE}/sitemap.xml\n")
+    write(out, "/robots.txt", f"User-agent: *\nAllow: /\nDisallow: /acces/\nSitemap: {BASE}/sitemap.xml\n")
     here = os.path.dirname(os.path.abspath(__file__))
     shutil.copy(os.path.join(here, "style.css"), os.path.join(out, "style.css"))
     shutil.copy(os.path.join(here, "favicon.svg"), os.path.join(out, "favicon.svg"))
