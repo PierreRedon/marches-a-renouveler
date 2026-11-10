@@ -3,7 +3,7 @@
 SITE = {
     "name": "Marchés à renouveler",
     "baseline": "Les marchés publics attribués et ceux qui arrivent à échéance, par métier et par département.",
-    "url": "https://pierreredon.github.io/marches-a-renouveler",
+    "url": "https://www.marches-a-renouveler.fr",
     "lignes_gratuites": 5,
     "prix": "19 € HT",
     # slug du métier -> lien de paiement. Vide tant que le compte de paiement n'existe pas.
