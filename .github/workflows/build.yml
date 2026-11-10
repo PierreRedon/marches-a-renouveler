@@ -30,7 +30,7 @@ jobs:
           python-version: "3.12"
       - run: pip install "duckdb>=1.1"
       - name: Télécharger les DECP consolidées
-        run: curl -sS -L --fail --retry 3 -o decp.parquet "https://www.data.gouv.fr/api/1/datasets/r/11cea8e8-df3e-4ed1-932b-781e2635e432"
+        run: curl -sS -L --fail --retry 6 --retry-all-errors --retry-delay 15 --connect-timeout 30 -C - -o decp.parquet "https://www.data.gouv.fr/api/1/datasets/r/11cea8e8-df3e-4ed1-932b-781e2635e432"
       - name: Générer le site
         run: python scripts/build.py --parquet decp.parquet --out public
       - name: Enregistrer le rapport de schéma
