@@ -295,6 +295,8 @@ def main():
         WHERE date_notif IS NOT NULL AND duree BETWEEN 1 AND 120;
     """)
     horizon = TODAY + dt.timedelta(days=548)
+    token = re.sub(r"[^A-Za-z0-9]", "", os.environ.get("LIST_TOKEN", ""))
+    vente_active = len(token) >= 24 and bool(SITE.get("lien_paiement"))
 
     # ---------- 1re passe : calcul ----------
     data = {}
@@ -374,7 +376,7 @@ def main():
                          f'<span class="pill">{fr_month(r[7])}</span>'] for r in free], "ech")
         else:
             t1 = '<p class="empty">Aucune échéance estimée dans les 18 mois d\'après les données publiées.</p>'
-        pay = SITE.get("lien_paiement")
+        pay = SITE.get("lien_paiement") if vente_active else None
         more = ""
         if reste > 0:
             if pay:
@@ -605,7 +607,6 @@ def main():
     write(out, "/404.html", page("Page introuvable | " + SITE["name"], "Page introuvable.", nf, "/404.html", robots="noindex"))
 
     # ---------- fichiers payants (chemin secret, hors plan du site) ----------
-    token = re.sub(r"[^A-Za-z0-9]", "", os.environ.get("LIST_TOKEN", ""))
     if len(token) >= 24:
         base_acces = f"/acces/{token}/"
         liens = ""
@@ -644,7 +645,7 @@ def main():
     shutil.copy(os.path.join(here, "favicon.svg"), os.path.join(out, "favicon.svg"))
 
     report["site"] = {"pages_metier_departement": len(data), "urls": len(urls), "echeances": tot_ech,
-                      "metiers": len(deps_of), "departements": len(mets_of)}
+                      "metiers": len(deps_of), "departements": len(mets_of), "vente_active": vente_active}
     with open(args.report, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=1)
     print(report["site"])

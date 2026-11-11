@@ -7,7 +7,7 @@ SITE = {
     "lignes_gratuites": 5,
     "prix": "29 € HT",
     # Lien de paiement unique (pack de toutes les listes). Vide tant que le compte de paiement n'existe pas.
-    "lien_paiement": "",
+    "lien_paiement": "https://buy.stripe.com/5kQ8wP9ZueLD2fu38Y3gk01",
     "editeur": {
         "nom": "Pierre Redon",
         "statut": "entrepreneur individuel",
