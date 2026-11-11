@@ -547,6 +547,15 @@ def main():
         e = sum(len(data[(ms, x)]["a_venir"]) for x in deps_of[ms])
         cards += (f'<a class="card" href="/{ms}/"><strong>{esc(met["nom"])}</strong>'
                   f'<span><b>{nb(e)}</b> échéance{pl(e)} · {len(deps_of[ms])} départements</span></a>')
+    offre = ""
+    if vente_active:
+        offre = ('<section id="pack"><h2>Toutes les échéances dans des fichiers Excel</h2>'
+                 f'<aside class="lock"><div><strong>Les pages du site montrent les {SITE["lignes_gratuites"]} prochaines '
+                 f'échéances de chaque métier et département. Le pack contient les {nb(tot_ech)}.</strong>'
+                 "<p>Un fichier par métier, tous départements, à ouvrir dans Excel : acheteur, titulaire en place, "
+                 "montant, échéance estimée. Paiement unique, fichiers mis à jour chaque jour.</p></div>"
+                 f'<a class="btn" href="{esc(SITE["lien_paiement"])}" rel="nofollow">Obtenir toutes les listes · '
+                 f'{esc(SITE["prix"])}</a></aside></section>')
     head = jsonld({"@context": "https://schema.org", "@type": "WebSite", "name": SITE["name"], "url": BASE + "/",
                    "description": SITE["baseline"], "inLanguage": "fr-FR"})
     body = f"""<section class="hero"><div class="wrap">
@@ -566,6 +575,7 @@ def main():
 <div><i>2</i><strong>Nous calculons l'échéance</strong><p>Date de notification plus durée : vous voyez quels marchés se terminent dans les 18 mois.</p></div>
 <div><i>3</i><strong>Vous prenez de l'avance</strong><p>Vous connaissez l'acheteur, le titulaire en place et le montant avant la publication de la consultation.</p></div>
 </div></section>
+{offre}
 <section class="note"><h2>Ce que ces données ne disent pas</h2><p>Les échéances sont des estimations, et tous les acheteurs ne publient pas leurs données. Rien ne garantit qu'un marché sera relancé à la date indiquée. Le détail est dans <a href="/methode/">la méthode</a>.</p></section>
 </div>"""
     write(out, "/", page(f"{SITE['name']} : les marchés publics qui arrivent à échéance, par métier et département",
