@@ -46,6 +46,7 @@ MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août
         "septembre", "octobre", "novembre", "décembre"]
 TODAY = dt.date.today()
 BASE = SITE["url"].rstrip("/")
+NAV_PACK = ""  # lien « Le pack » du menu, renseigné seulement si la vente est active
 FILTER_JS = ("var v=this.value.toLowerCase();document.querySelectorAll('.dep')"
              ".forEach(function(a){a.hidden=a.dataset.n.indexOf(v)<0})")
 
@@ -196,7 +197,7 @@ def page(title, description, body, path, extra_head="", robots="index,follow"):
 <a class="skip" href="#contenu">Aller au contenu</a>
 <header class="top"><div class="wrap">
 <a class="brand" href="/"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7"/><path d="M8 21l5-6 4 4 7-9" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Marchés <b>à renouveler</b></span></a>
-<nav><a href="/#metiers">Métiers</a><a href="/departements/">Départements</a><a href="/methode/">Méthode</a></nav>
+<nav><a href="/#metiers">Métiers</a><a href="/departements/">Départements</a><a href="/methode/">Méthode</a>{NAV_PACK}</nav>
 </div></header>
 <main id="contenu">
 {body}
@@ -297,6 +298,9 @@ def main():
     horizon = TODAY + dt.timedelta(days=548)
     token = re.sub(r"[^A-Za-z0-9]", "", os.environ.get("LIST_TOKEN", ""))
     vente_active = len(token) >= 24 and bool(SITE.get("lien_paiement"))
+    if vente_active:
+        global NAV_PACK
+        NAV_PACK = '<a class="navpack" href="/pack/">Le pack</a>'
 
     # ---------- 1re passe : calcul ----------
     data = {}
@@ -388,7 +392,8 @@ def main():
                     f'{esc(de(nmet))} {verbe} à échéance {esc(lieu)}.</strong>'
                     "<p>Le pack donne toutes les échéances de tous les métiers et de tous les départements, "
                     "en fichiers à ouvrir dans Excel : acheteur, titulaire en place, montant, échéance estimée. "
-                    "Paiement unique, fichiers mis à jour chaque jour.</p></div>"
+                    "Paiement unique, fichiers mis à jour chaque jour."
+                    + (' <a href="/pack/">Voir ce que contient le pack</a>' if pay else "") + "</p></div>"
                     f"{cta}</aside>")
         t2 = table(["Objet du marché", "Acheteur", "Titulaire", "Montant", "Notifié le"],
                    [[esc(short(r[1])), esc(r[2]), esc(titulaires_txt(r[3])), euro(r[4]), fr_date(r[5])] for r in lst[:20]])
@@ -547,13 +552,15 @@ def main():
         e = sum(len(data[(ms, x)]["a_venir"]) for x in deps_of[ms])
         cards += (f'<a class="card" href="/{ms}/"><strong>{esc(met["nom"])}</strong>'
                   f'<span><b>{nb(e)}</b> échéance{pl(e)} · {len(deps_of[ms])} départements</span></a>')
-    offre = ""
+    offre = btn_pack = ""
     if vente_active:
+        btn_pack = f' <a class="btn ghost" href="/pack/">Le pack complet · {esc(SITE["prix"])}</a>'
         offre = ('<section id="pack"><h2>Toutes les échéances dans des fichiers Excel</h2>'
                  f'<aside class="lock"><div><strong>Les pages du site montrent les {SITE["lignes_gratuites"]} prochaines '
                  f'échéances de chaque métier et département. Le pack contient les {nb(tot_ech)}.</strong>'
                  "<p>Un fichier par métier, tous départements, à ouvrir dans Excel : acheteur, titulaire en place, "
-                 "montant, échéance estimée. Paiement unique, fichiers mis à jour chaque jour.</p></div>"
+                 "montant, échéance estimée. Paiement unique, sans abonnement, fichiers mis à jour chaque jour. "
+                 '<a href="/pack/">Voir ce que contient le pack</a></p></div>'
                  f'<a class="btn" href="{esc(SITE["lien_paiement"])}" rel="nofollow">Obtenir toutes les listes · '
                  f'{esc(SITE["prix"])}</a></aside></section>')
     head = jsonld({"@context": "https://schema.org", "@type": "WebSite", "name": SITE["name"], "url": BASE + "/",
@@ -566,7 +573,7 @@ def main():
 <div><b>{nb(tot_marches)}</b><span>marchés analysés depuis 2019</span></div>
 <div><b>{len(deps_of)}</b><span>métiers suivis</span></div>
 <div><b>{len(mets_of)}</b><span>départements</span></div></div>
-<p class="actions"><a class="btn" href="#metiers">Choisir mon métier</a> <a class="btn ghost" href="/departements/">Voir par département</a></p>
+<p class="actions"><a class="btn" href="#metiers">Choisir mon métier</a> <a class="btn ghost" href="/departements/">Voir par département</a>{btn_pack}</p>
 </div></section>
 <div class="wrap">
 <section id="metiers"><h2>Choisissez votre métier</h2><div class="cards">{cards}</div></section>
@@ -583,6 +590,90 @@ def main():
                          "titulaire en place, montant et échéance estimée, par métier et par département.",
                          body, "/", head))
     urls.insert(0, "/")
+
+    # ---------- page du pack ----------
+    if vente_active:
+        path = "/pack/"
+        prix, pay, gratuit = SITE["prix"], SITE["lien_paiement"], SITE["lignes_gratuites"]
+        n_met, n_dep = len(deps_of), len(mets_of)
+        cta = f'<a class="btn" href="{esc(pay)}" rel="nofollow">Obtenir toutes les listes · {esc(prix)}</a>'
+        atouts = [
+            ("Toutes les échéances", f"{nb(tot_ech)} marchés qui se terminent dans les 18 mois, au lieu des "
+                                     f"{gratuit} premiers affichés sur chaque page du site."),
+            ("Tous les métiers", f"Un fichier pour chacun des {n_met} métiers suivis, sans supplément : "
+                                 "vous n'achetez pas métier par métier."),
+            ("Tous les départements", f"Chaque fichier couvre les {n_dep} départements : filtrez le vôtre "
+                                      "ou regardez les départements voisins."),
+            ("Un seul paiement", f"{prix}, une fois. Pas d'abonnement, pas de renouvellement automatique."),
+            ("Mis à jour chaque jour", "Les fichiers sont régénérés chaque jour à partir des données publiques. "
+                                       "Vous retéléchargez la dernière version quand vous voulez, depuis la même page."),
+            ("Prêt pour Excel", "Des fichiers à ouvrir directement dans Excel, à trier et filtrer par échéance, "
+                                "acheteur, montant ou titulaire. Aucun logiciel, aucun compte à créer."),
+        ]
+        atouts_html = "".join(f"<div><i>✓</i><strong>{esc(t)}</strong><p>{esc(x)}</p></div>" for t, x in atouts)
+        compare = table(["", "Sur le site, gratuitement", "Avec le pack"], [
+            ["Échéances visibles", f"Les {gratuit} prochaines par métier et département", f"Les {nb(tot_ech)}, sans limite"],
+            ["Métiers", f"{n_met}, page par page", f"{n_met}, un fichier complet par métier"],
+            ["Départements", f"{n_dep}, page par page", f"{n_dep} réunis dans chaque fichier"],
+            ["Tri et filtres", "Non", "Oui, dans Excel"],
+            ["Mise à jour", "Chaque jour", "Chaque jour, fichiers à retélécharger librement"],
+            ["Prix", "Gratuit", f"{esc(prix)}, paiement unique"]])
+        colonnes = [("Département", "Numéro et nom du département de l'acheteur."),
+                    ("Objet du marché", "L'intitulé publié par l'acheteur."),
+                    ("Acheteur", "La collectivité ou l'établissement public qui a passé le marché."),
+                    ("Titulaire(s)", "L'entreprise ou les entreprises en place aujourd'hui."),
+                    ("Montant", "Le montant publié, en euros, quand il est connu et cohérent."),
+                    ("Date de notification et durée", "Le point de départ du marché et sa durée en mois."),
+                    ("Échéance estimée", "La date à laquelle le marché devrait se terminer.")]
+        col_html = "".join(f"<li><span><b>{esc(c)}</b> : {esc(x)}</span></li>" for c, x in colonnes)
+        faq = [
+            ("Est-ce un abonnement ?", f"Non. Vous payez {prix} une seule fois, sans renouvellement automatique."),
+            ("Que contient le pack exactement ?",
+             f"Un fichier par métier ({n_met} métiers), couvrant {n_dep} départements, avec toutes les échéances "
+             f"estimées dans les 18 mois : {nb(tot_ech)} marchés à ce jour. Pour chaque marché : objet, acheteur, "
+             "titulaire en place, montant, date de notification, durée et échéance estimée."),
+            ("Les fichiers sont-ils mis à jour ?",
+             "Oui, chaque jour. Votre page de téléchargement reste la même : vous y retrouvez la dernière version."),
+            ("Comment ouvrir les fichiers ?",
+             "Ce sont des fichiers CSV prévus pour Excel : un double-clic suffit. Ils s'ouvrent aussi dans "
+             "LibreOffice et Google Sheets."),
+            ("À quoi servent ces listes ?",
+             "À savoir à l'avance quels marchés publics de votre métier se terminent, chez quel acheteur et avec quel "
+             "titulaire, pour vous préparer avant la publication de la nouvelle consultation."),
+            ("Les échéances sont-elles certaines ?",
+             "Non, ce sont des estimations : date de notification plus durée publiée. Les reconductions et avenants "
+             "ne sont pas toujours publiés, et tous les acheteurs ne publient pas leurs données."),
+        ]
+        faq_html = "".join(f"<details><summary>{esc(qq)}</summary><p>{esc(aa)}</p></details>" for qq, aa in faq)
+        bc = [("Accueil", "/"), ("Le pack complet", path)]
+        descr = (f"Toutes les échéances de marchés publics en fichiers Excel : {nb(tot_ech)} marchés, {n_met} métiers, "
+                 f"{n_dep} départements. Paiement unique de {prix}, sans abonnement, mis à jour chaque jour.")
+        head = breadcrumb_ld(bc) + jsonld({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": qq, "acceptedAnswer": {"@type": "Answer", "text": aa}} for qq, aa in faq]})
+        body = f"""<section class="hero small"><div class="wrap">
+{crumbs(bc)}
+<p class="eyebrow">Paiement unique · sans abonnement</p>
+<h1>Toutes les échéances de marchés publics, dans des fichiers Excel</h1>
+<p class="lead">Le site montre gratuitement les {gratuit} prochaines échéances de chaque page. Le pack vous donne la liste complète, pour tous les métiers et tous les départements, en un seul paiement de {esc(prix)}.</p>
+<div class="kpis"><div class="hot"><b>{nb(tot_ech)}</b><span>échéances dans les 18 mois</span></div>
+<div><b>{n_met}</b><span>métiers, un fichier chacun</span></div>
+<div><b>{n_dep}</b><span>départements</span></div>
+<div><b>{esc(prix)}</b><span>une seule fois</span></div></div>
+<p class="actions">{cta}</p>
+</div></section>
+<div class="wrap">
+<section><h2>Ce que vous obtenez</h2><div class="steps">{atouts_html}</div></section>
+<section><h2>Le site gratuit et le pack, côte à côte</h2>{compare}</section>
+<section><h2>Ce qu'il y a dans chaque fichier</h2>
+<p class="hint">Une ligne par marché qui arrive à échéance.</p><ol class="rank">{col_html}</ol></section>
+<section><aside class="lock"><div><strong>{nb(tot_ech)} échéances, {n_met} métiers, {n_dep} départements.</strong>
+<p>Un seul paiement, sans abonnement. Fichiers mis à jour chaque jour.</p></div>{cta}</aside></section>
+<section><h2>Questions fréquentes</h2><div class="faq">{faq_html}</div></section>
+<section class="note"><h2>À savoir avant d'acheter</h2><p>Les échéances sont des estimations et rien ne garantit qu'un marché sera relancé à la date indiquée. Le détail est dans <a href="/methode/">la méthode</a>. Vous pouvez juger de la qualité des données sur les pages gratuites du site avant d'acheter.</p></section>
+</div>"""
+        write(out, path, page("Pack complet : toutes les échéances de marchés publics en fichiers Excel | " + SITE["name"],
+                              descr, body, path, head))
+        urls.append(path)
 
     # ---------- pages fixes ----------
     bc = [("Accueil", "/"), ("Méthode et limites", "/methode/")]

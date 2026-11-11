@@ -60,6 +60,8 @@ td:first-child{font-weight:600;min-width:240px}
 .lock{display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:14px;background:var(--navy);color:#fff;border-radius:var(--r);padding:18px 20px}
 .lock p{margin:4px 0 0;color:#c9d6e6;font-size:.94rem}
 .lock .btn{margin:0}
+.lock a:not(.btn){color:#fff}
+.top nav a.navpack{color:var(--amber);font-weight:700}
 .soon{background:rgba(255,255,255,.12);border:1px dashed rgba(255,255,255,.4);border-radius:10px;padding:10px 16px;font-weight:600;white-space:nowrap}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:28px}
 .rank{list-style:none;counter-reset:r;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
