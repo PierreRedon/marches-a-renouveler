@@ -83,6 +83,27 @@ Une question ? Répondez simplement à ce message.
     return m
 
 
+def connexion(host, contact, mdp):
+    """Ouvre la session Gmail : port 465 (SSL), puis 587 (STARTTLS) si le serveur coupe la connexion."""
+    derniere = None
+    for port in (465, 587):
+        try:
+            if port == 465:
+                smtp = smtplib.SMTP_SSL(host, port, timeout=30)
+            else:
+                smtp = smtplib.SMTP(host, port, timeout=30)
+                smtp.starttls()
+            smtp.login(contact, mdp)
+            return smtp
+        except smtplib.SMTPAuthenticationError as e:
+            raise SystemExit(f"Gmail a refusé la connexion (code {e.smtp_code}) : le mot de passe d'application est "
+                             "faux, révoqué, ou n'appartient pas au compte de l'adresse de contact.")
+        except (smtplib.SMTPServerDisconnected, OSError) as e:
+            derniere = e
+            print(f"Port {port} : connexion coupée ({type(e).__name__})")
+    raise SystemExit(f"Gmail a coupé la connexion sur les deux ports ({derniere}).")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--etat", default="etat_acces.json", help="fichier d'état (empreintes des paiements déjà traités)")
@@ -133,15 +154,7 @@ def main():
     smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
     echecs = 0
     if args.essai or a_faire:
-        with smtplib.SMTP_SSL(smtp_host, 465, timeout=30) as smtp:
-            try:
-                smtp.login(contact, mdp)
-            except smtplib.SMTPAuthenticationError as e:
-                raise SystemExit(f"Gmail a refusé la connexion (code {e.smtp_code}) : le mot de passe d'application est "
-                                 f"faux, révoqué, ou n'appartient pas au compte de l'adresse de contact.")
-            except smtplib.SMTPServerDisconnected:
-                raise SystemExit("Gmail a coupé la connexion pendant l'identification : le mot de passe d'application "
-                                 "est probablement faux ou n'appartient pas au compte de l'adresse de contact.")
+        with connexion(smtp_host, contact, mdp) as smtp:
             if args.essai:
                 m = message(contact, url, contact)
                 m.replace_header("Subject", "[Essai] " + m["Subject"])
