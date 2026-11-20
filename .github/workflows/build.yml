@@ -41,7 +41,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/schema_report.json || true
-          git diff --cached --quiet || (git commit -m "Rapport de génération" && git push)
+          # un rapport non poussé (branche qui a avancé entre-temps) ne doit pas empêcher la publication du site
+          git diff --cached --quiet || (git commit -m "Rapport de génération" && git push) || echo "::warning::Rapport de génération non enregistré (la branche a avancé entre-temps)"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
