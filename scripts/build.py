@@ -16,6 +16,8 @@ import re
 import shutil
 import sys
 
+from zoneinfo import ZoneInfo
+
 import duckdb
 
 from config import DEPARTEMENTS, METIERS, SITE
@@ -48,11 +50,17 @@ TODAY = dt.date.today()
 BASE = SITE["url"].rstrip("/")
 # Prix de lancement : annonce affichée jusqu'à la date de fin, puis bascule sur le nouveau prix si son lien existe.
 PROMO = ""
+PROMO_FIN = ""  # « 31 décembre »
+PROMO_CD = ""  # compte à rebours jusqu'à la vraie date de fin (minuit, heure de Paris)
+TOP_PROMO = ""  # bandeau en haut de chaque page, renseigné seulement si la vente est active
 _fin = dt.date.fromisoformat(SITE["lancement_fin"]) if SITE.get("lancement_fin") else None
 if _fin and SITE.get("prix_apres"):
     if TODAY <= _fin:
         PROMO = (f"Prix de lancement : {SITE['prix']} jusqu'au {_fin.day} {MOIS[_fin.month - 1]} {_fin.year}, "
                  f"puis {SITE['prix_apres']}.")
+        PROMO_FIN = f"{_fin.day} {MOIS[_fin.month - 1]}"
+        _cible = dt.datetime.combine(_fin + dt.timedelta(days=1), dt.time(), ZoneInfo("Europe/Paris")).isoformat()
+        PROMO_CD = (f'<span class="cd" data-fin="{_cible}">jusqu\'au {PROMO_FIN} {_fin.year}</span>')
     elif SITE.get("lien_paiement_apres"):
         SITE["prix"], SITE["lien_paiement"] = SITE["prix_apres"], SITE["lien_paiement_apres"]
 EXTRAIT_DEPS, EXTRAIT_LIGNES = 10, 3  # extrait gratuit : 3 échéances dans 10 départements
@@ -189,8 +197,18 @@ def crumbs(items):
     return '<nav class="crumb" aria-label="Fil d\'Ariane">' + " <i>›</i> ".join(parts) + "</nav>"
 
 
-def page(title, description, body, path, extra_head="", robots="index,follow"):
+CD_JS = """<script>(function(){var e=document.querySelectorAll('.cd');if(!e.length)return;
+var f=new Date(e[0].dataset.fin).getTime();function p(n){return (n<10?'0':'')+n}
+function t(){var s=Math.floor((f-Date.now())/1000);if(s<=0){document.querySelectorAll('.promobar,.promo').forEach(function(x){x.hidden=true});return}
+var j=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);
+var c='encore '+j+' j '+p(h)+' h '+p(m)+' min '+p(s%60)+' s';e.forEach(function(x){x.textContent=c})}
+t();setInterval(t,1000)})()</script>"""
+
+
+def page(title, description, body, path, extra_head="", robots="index,follow", promo=True):
     url = BASE + path
+    bandeau = TOP_PROMO if promo else ""
+    script = CD_JS if 'class="cd"' in bandeau + body else ""
     return f"""<!doctype html>
 <html lang="fr">
 <head>
@@ -214,6 +232,7 @@ def page(title, description, body, path, extra_head="", robots="index,follow"):
 </head>
 <body>
 <a class="skip" href="#contenu">Aller au contenu</a>
+{bandeau}
 <header class="top"><div class="wrap">
 <a class="brand" href="/"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7"/><path d="M8 21l5-6 4 4 7-9" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Marchés <b>à renouveler</b></span></a>
 <nav><a href="/#metiers">Métiers</a><a href="/departements/">Départements</a><a href="/methode/">Méthode</a>{NAV_PACK}</nav>
@@ -226,6 +245,7 @@ def page(title, description, body, path, extra_head="", robots="index,follow"):
 <div><p><a href="/methode/">Méthode et limites</a><br><a href="/departements/">Tous les départements</a><br><a href="/mentions-legales/">Mentions légales</a></p></div>
 <div><p>Source : données essentielles de la commande publique consolidées, data.gouv.fr, Licence Ouverte 2.0.<br>Dernière mise à jour : {fr_date(TODAY)}. Les échéances sont des estimations.</p></div>
 </div></footer>
+{script}
 </body>
 </html>
 """
@@ -320,6 +340,11 @@ def main():
     if vente_active:
         global NAV_PACK
         NAV_PACK = '<a class="navpack" href="/pack/">Le pack</a>'
+        if PROMO:
+            global TOP_PROMO
+            TOP_PROMO = (f'<a class="promobar" href="/pack/"><b>Prix de lancement</b> <span>Le pack complet à '
+                         f'<b>{esc(SITE["prix"])}</b>, puis {esc(SITE["prix_apres"])} après le {PROMO_FIN}</span> '
+                         f'<em>{PROMO_CD}</em> <u>Voir le pack</u></a>')
 
     # ---------- 1re passe : calcul ----------
     data = {}
@@ -574,7 +599,8 @@ def main():
                   f'<span><b>{nb(e)}</b> échéance{pl(e)} · {len(deps_of[ms])} départements</span></a>')
     offre = btn_pack = ""
     if vente_active:
-        btn_pack = f' <a class="btn ghost" href="/pack/">Le pack complet · {esc(SITE["prix"])}</a>'
+        btn_pack = (f' <a class="btn ghost{" or" if PROMO else ""}" href="/pack/">Le pack complet · {esc(SITE["prix"])}'
+                    + (f" jusqu'au {PROMO_FIN}" if PROMO else "") + "</a>")
         offre = ('<section id="pack"><h2>Toutes les échéances dans des fichiers Excel</h2>'
                  f'<aside class="lock"><div><strong>Les pages du site montrent les {SITE["lignes_gratuites"]} prochaines '
                  f'échéances de chaque métier et département. Le pack contient les {nb(tot_ech)}.</strong>'
@@ -698,7 +724,7 @@ def main():
 <div><b>{n_dep}</b><span>départements</span></div>
 <div><b>{esc(prix)}</b><span>une seule fois</span></div></div>
 <p class="actions">{cta} <a class="btn ghost" href="/{extrait_fichier}" download>Télécharger un extrait gratuit</a></p>
-{f'<p class="promo">{esc(PROMO)}</p>' if PROMO else ""}
+{f'<p class="promo">{esc(PROMO)} <span class="cdbox">{PROMO_CD}</span></p>' if PROMO else ""}
 </div></section>
 <div class="wrap">
 <section><h2>Ce que vous obtenez</h2><div class="steps">{atouts_html}</div></section>
@@ -772,7 +798,7 @@ def main():
 <div class="wrap"><section><h2>Téléchargez un fichier par métier</h2><div class="cards">{liens}</div></section>
 <section class="note"><h2>À savoir</h2><p>Chaque fichier contient tous les départements : filtrez la première colonne dans Excel. Les échéances sont des estimations, voir <a href="/methode/">la méthode</a>. Un problème ? Écrivez à {esc(SITE['editeur']['contact'])}.</p></section></div>"""
         write(out, base_acces, page("Vos listes complètes | " + SITE["name"], "Accès aux listes complètes.",
-                                    acces, base_acces, robots="noindex,nofollow"))
+                                    acces, base_acces, robots="noindex,nofollow", promo=False))
 
     sm = "".join(f"<url><loc>{esc(BASE + u)}</loc><lastmod>{TODAY.isoformat()}</lastmod></url>" for u in urls)
     write(out, "/sitemap.xml", '<?xml version="1.0" encoding="UTF-8"?>'
