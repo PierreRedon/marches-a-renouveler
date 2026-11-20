@@ -91,12 +91,17 @@ def main():
     args = ap.parse_args()
 
     key = os.environ.get("STRIPE_KEY", "").strip()
-    mdp = os.environ.get("GMAIL_APP_PASSWORD", "").replace(" ", "")
+    mdp_brut = os.environ.get("GMAIL_APP_PASSWORD", "")
+    mdp = re.sub(r"[^A-Za-z0-9]", "", mdp_brut)  # un mot de passe d'application : 16 lettres, espaces sans importance
     token = re.sub(r"[^A-Za-z0-9]", "", os.environ.get("LIST_TOKEN", ""))
     manquants = [n for n, v in (("STRIPE_KEY", key), ("GMAIL_APP_PASSWORD", mdp)) if not v]
     if manquants:
         print("Envoi inactif : secret(s) absent(s) :", ", ".join(manquants))
         return
+    if len(mdp) != 16:
+        raise SystemExit(f"GMAIL_APP_PASSWORD ne ressemble pas à un mot de passe d'application Gmail : "
+                         f"{len(mdp)} lettres ou chiffres au lieu de 16 ({len(mdp_brut.strip())} caractères saisis). "
+                         "Ce n'est pas le mot de passe habituel du compte : il se crée sur myaccount.google.com/apppasswords.")
     if len(token) < 24:
         raise SystemExit("LIST_TOKEN absent ou trop court : impossible de construire l'adresse de téléchargement.")
     contact = SITE["editeur"]["contact"]
@@ -129,7 +134,14 @@ def main():
     echecs = 0
     if args.essai or a_faire:
         with smtplib.SMTP_SSL(smtp_host, 465, timeout=30) as smtp:
-            smtp.login(contact, mdp)
+            try:
+                smtp.login(contact, mdp)
+            except smtplib.SMTPAuthenticationError as e:
+                raise SystemExit(f"Gmail a refusé la connexion (code {e.smtp_code}) : le mot de passe d'application est "
+                                 f"faux, révoqué, ou n'appartient pas au compte de l'adresse de contact.")
+            except smtplib.SMTPServerDisconnected:
+                raise SystemExit("Gmail a coupé la connexion pendant l'identification : le mot de passe d'application "
+                                 "est probablement faux ou n'appartient pas au compte de l'adresse de contact.")
             if args.essai:
                 m = message(contact, url, contact)
                 m.replace_header("Subject", "[Essai] " + m["Subject"])
