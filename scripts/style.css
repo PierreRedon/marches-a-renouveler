@@ -106,3 +106,19 @@ tr.lk td{background:#faf8f3}
 .mask{display:inline-block;background:var(--line);color:var(--muted);border-radius:6px;padding:2px 9px;font-size:.82rem;white-space:nowrap}
 .rassure{margin:10px 0 0;color:var(--muted);font-size:.9rem}
 @media(max-width:720px){tr.lk~tr.lk~tr.lk{display:none}}
+.packtop{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:36px;align-items:center;margin-top:14px}
+.buy{background:#fff;color:var(--ink);border-radius:16px;padding:24px;box-shadow:0 14px 40px rgba(0,0,0,.28);border-top:6px solid var(--amber)}
+.buy p{margin:0}
+.buy-t{font-weight:700;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;color:var(--amber-d)}
+.buy-p b{font:700 2.9rem/1.1 Georgia,serif;color:var(--navy)}
+.buy-p span{color:var(--muted);font-size:.95rem;margin-left:6px}
+.buy .apres{color:var(--muted);margin-top:2px}
+.buy .cdl{margin-top:10px}
+.buy .cdbox{margin-left:0;font-weight:700}
+.buy ul{list-style:none;margin:16px 0 18px;padding:0}
+.buy li{padding:5px 0 5px 26px;position:relative}
+.buy li::before{content:"✓";position:absolute;left:0;color:var(--amber-d);font-weight:700}
+.buy .btn{display:block;text-align:center;margin:0;font-size:1.05rem;padding:14px 18px}
+.buy-s{color:var(--muted);font-size:.84rem;text-align:center;margin-top:10px!important}
+.actions.mid{margin:18px 0 0}
+@media(max-width:860px){.packtop{grid-template-columns:1fr;gap:22px}}

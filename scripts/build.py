@@ -211,6 +211,9 @@ t();setInterval(t,1000)})()</script>"""
 def page(title, description, body, path, extra_head="", robots="index,follow", promo=True):
     url = BASE + path
     bandeau = TOP_PROMO if promo else ""
+    if path == "/pack/" and bandeau:  # sur la page du pack, le bandeau mène directement au paiement
+        bandeau = (bandeau.replace('href="/pack/"', f'href="{esc(SITE["lien_paiement"])}" rel="nofollow"')
+                   .replace("Voir le pack", "Acheter le pack"))
     script = CD_JS if 'class="cd"' in bandeau + body else ""
     return f"""<!doctype html>
 <html lang="fr">
@@ -724,21 +727,32 @@ def main():
                  f"{n_dep} départements. Paiement unique de {prix}, sans abonnement, mis à jour chaque jour.")
         head = breadcrumb_ld(bc) + jsonld({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": qq, "acceptedAnswer": {"@type": "Answer", "text": aa}} for qq, aa in faq]})
+        fin_txt = f"{_fin.day} {MOIS[_fin.month - 1]} {_fin.year}" if PROMO else ""
+        carte_promo = (f'<p class="apres">puis {esc(SITE["prix_apres"])} après le {fin_txt}</p>'
+                       f'<p class="cdl"><span class="cdbox">{PROMO_CD}</span></p>') if PROMO else ""
+        carte = f"""<aside class="buy">
+<p class="buy-t">{"Prix de lancement" if PROMO else "Le pack complet"}</p>
+<p class="buy-p"><b>{esc(prix)}</b> <span>une seule fois</span></p>
+{carte_promo}
+<ul><li>{nb(tot_ech)} échéances dans les 18 mois</li><li>{n_met} métiers, un fichier Excel chacun</li><li>{n_dep} départements dans chaque fichier</li><li>Fichiers mis à jour chaque jour</li></ul>
+{cta}
+<p class="buy-s">Paiement sécurisé par Stripe · sans abonnement</p>
+</aside>"""
         body = f"""<section class="hero small"><div class="wrap">
 {crumbs(bc)}
+<div class="packtop"><div>
 <p class="eyebrow">Paiement unique · sans abonnement</p>
 <h1>Toutes les échéances de marchés publics, dans des fichiers Excel</h1>
-<p class="lead">Le site montre gratuitement les {gratuit} prochaines échéances de chaque page. Le pack vous donne la liste complète, pour tous les métiers et tous les départements, en un seul paiement de {esc(prix)}.</p>
-<div class="kpis"><div class="hot"><b>{nb(tot_ech)}</b><span>échéances dans les 18 mois</span></div>
-<div><b>{n_met}</b><span>métiers, un fichier chacun</span></div>
-<div><b>{n_dep}</b><span>départements</span></div>
-<div><b>{esc(prix)}</b><span>une seule fois</span></div></div>
-<p class="actions">{cta} <a class="btn ghost" href="/{extrait_fichier}" download>Télécharger un extrait gratuit</a></p>
-{f'<p class="promo">{esc(PROMO)} <span class="cdbox">{PROMO_CD}</span></p>' if PROMO else ""}
+<p class="lead">Le site montre gratuitement les {gratuit} prochaines échéances de chaque page. Le pack vous donne la liste complète, pour tous les métiers et tous les départements : acheteur, titulaire en place, montant et échéance estimée de chaque marché.</p>
+<p class="actions"><a class="btn ghost" href="/{extrait_fichier}" download>Télécharger un extrait gratuit</a></p>
+</div>
+{carte}
+</div>
 </div></section>
 <div class="wrap">
 <section><h2>Ce que vous obtenez</h2><div class="steps">{atouts_html}</div></section>
-<section><h2>Le site gratuit et le pack, côte à côte</h2>{compare}</section>
+<section><h2>Le site gratuit et le pack, côte à côte</h2>{compare}
+<p class="actions mid">{cta}</p></section>
 <section><h2>Ce qu'il y a dans chaque fichier</h2>
 <p class="hint">Une ligne par marché qui arrive à échéance.</p><ol class="rank">{col_html}</ol>
 <p>Jugez sur pièce : <a href="/{extrait_fichier}" download>téléchargez un extrait gratuit du fichier « {esc(extrait_nom)} »</a> ({extrait_n} lignes réelles, mêmes colonnes que les fichiers du pack).</p></section>
