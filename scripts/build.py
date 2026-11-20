@@ -610,19 +610,33 @@ def main():
         e = sum(len(data[(ms, x)]["a_venir"]) for x in deps_of[ms])
         cards += (f'<a class="card" href="/{ms}/"><strong>{esc(met["nom"])}</strong>'
                   f'<span><b>{nb(e)}</b> échéance{pl(e)} · {len(deps_of[ms])} départements</span></a>')
+    carte = extrait_fichier = ""
+    if vente_active:
+        ex_met = next(x for x in METIERS if x["slug"] in deps_of)
+        extrait_nom, extrait_fichier = ex_met["nom"], f"extrait-{ex_met['slug']}.csv"
+        fin_txt = f"{_fin.day} {MOIS[_fin.month - 1]} {_fin.year}" if PROMO else ""
+        carte_promo = (f'<p class="apres">puis {esc(SITE["prix_apres"])} après le {fin_txt}</p>'
+                       f'<p class="cdl"><span class="cdbox">{PROMO_CD}</span></p>') if PROMO else ""
+        carte = f"""<aside class="buy">
+<p class="buy-t">{"Prix de lancement" if PROMO else "Le pack complet"}</p>
+<p class="buy-p"><b>{esc(SITE["prix"])}</b> <span>une seule fois</span></p>
+{carte_promo}
+<ul><li>{nb(tot_ech)} échéances dans les 18 mois</li><li>{len(deps_of)} métiers, un fichier Excel chacun</li><li>{len(mets_of)} départements dans chaque fichier</li><li>Fichiers mis à jour chaque jour</li></ul>
+<a class="btn" href="{esc(SITE["lien_paiement"])}" rel="nofollow">Obtenir toutes les listes · {esc(SITE["prix"])}</a>
+<p class="buy-s">Paiement sécurisé par Stripe · sans abonnement</p>
+</aside>"""
     offre = btn_pack = ""
     if vente_active:
         btn_pack = (f' <a class="btn ghost{" or" if PROMO else ""}" href="/pack/">Le pack complet · {esc(SITE["prix"])}'
                     + (f" · {PROMO_CD}" if PROMO else "") + "</a>")
-        offre = ('<section id="pack"><h2>Toutes les échéances dans des fichiers Excel</h2>'
-                 f'<aside class="lock"><div><strong>Les pages du site montrent les {SITE["lignes_gratuites"]} prochaines '
-                 f'échéances de chaque métier et département. Le pack contient les {nb(tot_ech)}.</strong>'
-                 "<p>Un fichier par métier, tous départements, à ouvrir dans Excel : acheteur, titulaire en place, "
-                 "montant, échéance estimée. Paiement unique, sans abonnement, fichiers mis à jour chaque jour. "
-                 '<a href="/pack/">Voir ce que contient le pack</a>'
-                 + (f' <b class="promo">{esc(PROMO)}</b> <span class="cdbox">{PROMO_CD}</span>' if PROMO else "") + '</p></div>'
-                 f'<a class="btn" href="{esc(SITE["lien_paiement"])}" rel="nofollow">Obtenir toutes les listes · '
-                 f'{esc(SITE["prix"])}</a></aside>{RASSURE}</section>')
+        offre = f"""<section id="pack"><div class="packhome"><div>
+<h2>Toutes les échéances dans des fichiers Excel</h2>
+<p><strong>Les pages du site montrent les {SITE["lignes_gratuites"]} prochaines échéances de chaque métier et département. Le pack contient les {nb(tot_ech)}.</strong></p>
+<p>Un fichier par métier, tous départements, à ouvrir dans Excel : acheteur, titulaire en place, montant, échéance estimée. Paiement unique, sans abonnement, fichiers mis à jour chaque jour.</p>
+<p class="actions"><a class="btn ghost" href="/pack/">Voir ce que contient le pack</a> <a class="btn ghost" href="/{extrait_fichier}" download>Télécharger un extrait gratuit</a></p>
+</div>
+{carte}
+</div>{RASSURE}</section>"""
     head = jsonld({"@context": "https://schema.org", "@type": "WebSite", "name": SITE["name"], "url": BASE + "/",
                    "description": SITE["baseline"], "inLanguage": "fr-FR"})
     body = f"""<section class="hero"><div class="wrap">
@@ -657,8 +671,6 @@ def main():
         prix, pay, gratuit = SITE["prix"], SITE["lien_paiement"], SITE["lignes_gratuites"]
         n_met, n_dep = len(deps_of), len(mets_of)
         # extrait gratuit : mêmes colonnes que les fichiers du pack, quelques lignes déjà visibles sur le site
-        ex_met = next(x for x in METIERS if x["slug"] in deps_of)
-        extrait_nom, extrait_fichier = ex_met["nom"], f"extrait-{ex_met['slug']}.csv"
         ex_deps = sorted(sorted(deps_of[ex_met["slug"]], key=lambda x: -len(data[(ex_met["slug"], x)]["a_venir"]))[:EXTRAIT_DEPS])
         extrait_n = 0
         with open(os.path.join(out, extrait_fichier), "w", encoding="utf-8-sig", newline="") as f:
@@ -727,17 +739,6 @@ def main():
                  f"{n_dep} départements. Paiement unique de {prix}, sans abonnement, mis à jour chaque jour.")
         head = breadcrumb_ld(bc) + jsonld({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": qq, "acceptedAnswer": {"@type": "Answer", "text": aa}} for qq, aa in faq]})
-        fin_txt = f"{_fin.day} {MOIS[_fin.month - 1]} {_fin.year}" if PROMO else ""
-        carte_promo = (f'<p class="apres">puis {esc(SITE["prix_apres"])} après le {fin_txt}</p>'
-                       f'<p class="cdl"><span class="cdbox">{PROMO_CD}</span></p>') if PROMO else ""
-        carte = f"""<aside class="buy">
-<p class="buy-t">{"Prix de lancement" if PROMO else "Le pack complet"}</p>
-<p class="buy-p"><b>{esc(prix)}</b> <span>une seule fois</span></p>
-{carte_promo}
-<ul><li>{nb(tot_ech)} échéances dans les 18 mois</li><li>{n_met} métiers, un fichier Excel chacun</li><li>{n_dep} départements dans chaque fichier</li><li>Fichiers mis à jour chaque jour</li></ul>
-{cta}
-<p class="buy-s">Paiement sécurisé par Stripe · sans abonnement</p>
-</aside>"""
         body = f"""<section class="hero small"><div class="wrap">
 {crumbs(bc)}
 <div class="packtop"><div>

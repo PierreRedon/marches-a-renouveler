@@ -122,3 +122,10 @@ tr.lk td{background:#faf8f3}
 .buy-s{color:var(--muted);font-size:.84rem;text-align:center;margin-top:10px!important}
 .actions.mid{margin:18px 0 0}
 @media(max-width:860px){.packtop{grid-template-columns:1fr;gap:22px}}
+.packhome{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:36px;align-items:center;background:linear-gradient(160deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;border-radius:16px;padding:32px}
+.packhome h2{color:#fff;margin-bottom:14px}
+.packhome>div>p{color:#d7e1ee;margin:0 0 10px}
+.packhome>div>p strong{color:#fff}
+.packhome .actions{margin-top:20px}
+.packhome .buy{box-shadow:0 10px 30px rgba(0,0,0,.3)}
+@media(max-width:860px){.packhome{grid-template-columns:1fr;gap:22px;padding:22px 18px}}
