@@ -340,11 +340,6 @@ def main():
     if vente_active:
         global NAV_PACK
         NAV_PACK = '<a class="navpack" href="/pack/">Le pack</a>'
-        if PROMO:
-            global TOP_PROMO
-            TOP_PROMO = (f'<a class="promobar" href="/pack/"><b>Prix de lancement</b> <span>Le pack complet à '
-                         f'<b>{esc(SITE["prix"])}</b>, puis {esc(SITE["prix_apres"])} après le {PROMO_FIN}</span> '
-                         f'<em>{PROMO_CD}</em> <u>Voir le pack</u></a>')
 
     # ---------- 1re passe : calcul ----------
     data = {}
@@ -438,7 +433,7 @@ def main():
                     "en fichiers à ouvrir dans Excel : acheteur, titulaire en place, montant, échéance estimée. "
                     "Paiement unique, fichiers mis à jour chaque jour."
                     + (' <a href="/pack/">Voir ce que contient le pack</a>' if pay else "")
-                    + (f' <b class="promo">{esc(PROMO)}</b>' if pay and PROMO else "") + "</p></div>"
+                    + (f' <b class="promo">{esc(PROMO)}</b> <span class="cdbox">{PROMO_CD}</span>' if pay and PROMO else "") + "</p></div>"
                     f"{cta}</aside>")
         t2 = table(["Objet du marché", "Acheteur", "Titulaire", "Montant", "Notifié le"],
                    [[esc(short(r[1])), esc(r[2]), esc(titulaires_txt(r[3])), euro(r[4]), fr_date(r[5])] for r in lst[:20]])
@@ -607,7 +602,7 @@ def main():
                  "<p>Un fichier par métier, tous départements, à ouvrir dans Excel : acheteur, titulaire en place, "
                  "montant, échéance estimée. Paiement unique, sans abonnement, fichiers mis à jour chaque jour. "
                  '<a href="/pack/">Voir ce que contient le pack</a>'
-                 + (f' <b class="promo">{esc(PROMO)}</b>' if PROMO else "") + '</p></div>'
+                 + (f' <b class="promo">{esc(PROMO)}</b> <span class="cdbox">{PROMO_CD}</span>' if PROMO else "") + '</p></div>'
                  f'<a class="btn" href="{esc(SITE["lien_paiement"])}" rel="nofollow">Obtenir toutes les listes · '
                  f'{esc(SITE["prix"])}</a></aside></section>')
     head = jsonld({"@context": "https://schema.org", "@type": "WebSite", "name": SITE["name"], "url": BASE + "/",
