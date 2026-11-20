@@ -46,6 +46,16 @@ MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août
         "septembre", "octobre", "novembre", "décembre"]
 TODAY = dt.date.today()
 BASE = SITE["url"].rstrip("/")
+# Prix de lancement : annonce affichée jusqu'à la date de fin, puis bascule sur le nouveau prix si son lien existe.
+PROMO = ""
+_fin = dt.date.fromisoformat(SITE["lancement_fin"]) if SITE.get("lancement_fin") else None
+if _fin and SITE.get("prix_apres"):
+    if TODAY <= _fin:
+        PROMO = (f"Prix de lancement : {SITE['prix']} jusqu'au {_fin.day} {MOIS[_fin.month - 1]} {_fin.year}, "
+                 f"puis {SITE['prix_apres']}.")
+    elif SITE.get("lien_paiement_apres"):
+        SITE["prix"], SITE["lien_paiement"] = SITE["prix_apres"], SITE["lien_paiement_apres"]
+EXTRAIT_DEPS, EXTRAIT_LIGNES = 10, 3  # extrait gratuit : 3 échéances dans 10 départements
 NAV_PACK = ""  # lien « Le pack » du menu, renseigné seulement si la vente est active
 FILTER_JS = ("var v=this.value.toLowerCase();document.querySelectorAll('.dep')"
              ".forEach(function(a){a.hidden=a.dataset.n.indexOf(v)<0})")
@@ -129,6 +139,15 @@ def dep_slug(code):
 def short(s, n=150):
     s = re.sub(r"\s+", " ", s or "").strip()
     return s if len(s) <= n else s[: n - 1].rstrip() + "…"
+
+
+CSV_ENTETE = ["Département", "Nom du département", "Objet du marché", "Acheteur", "Titulaire(s)",
+              "Montant (€)", "Date de notification", "Durée (mois)", "Échéance estimée"]
+
+
+def csv_ligne(dep, r):
+    return [dep, DEPARTEMENTS[dep], short(r[1], 400), r[2] or "", r[3] or "",
+            "" if not r[4] or r[4] <= 0 else round(r[4]), fr_date(r[5]), r[6], r[7].strftime("%d/%m/%Y")]
 
 
 def titulaires_txt(s, maxi=2):
@@ -393,7 +412,8 @@ def main():
                     "<p>Le pack donne toutes les échéances de tous les métiers et de tous les départements, "
                     "en fichiers à ouvrir dans Excel : acheteur, titulaire en place, montant, échéance estimée. "
                     "Paiement unique, fichiers mis à jour chaque jour."
-                    + (' <a href="/pack/">Voir ce que contient le pack</a>' if pay else "") + "</p></div>"
+                    + (' <a href="/pack/">Voir ce que contient le pack</a>' if pay else "")
+                    + (f' <b class="promo">{esc(PROMO)}</b>' if pay and PROMO else "") + "</p></div>"
                     f"{cta}</aside>")
         t2 = table(["Objet du marché", "Acheteur", "Titulaire", "Montant", "Notifié le"],
                    [[esc(short(r[1])), esc(r[2]), esc(titulaires_txt(r[3])), euro(r[4]), fr_date(r[5])] for r in lst[:20]])
@@ -560,7 +580,8 @@ def main():
                  f'échéances de chaque métier et département. Le pack contient les {nb(tot_ech)}.</strong>'
                  "<p>Un fichier par métier, tous départements, à ouvrir dans Excel : acheteur, titulaire en place, "
                  "montant, échéance estimée. Paiement unique, sans abonnement, fichiers mis à jour chaque jour. "
-                 '<a href="/pack/">Voir ce que contient le pack</a></p></div>'
+                 '<a href="/pack/">Voir ce que contient le pack</a>'
+                 + (f' <b class="promo">{esc(PROMO)}</b>' if PROMO else "") + '</p></div>'
                  f'<a class="btn" href="{esc(SITE["lien_paiement"])}" rel="nofollow">Obtenir toutes les listes · '
                  f'{esc(SITE["prix"])}</a></aside></section>')
     head = jsonld({"@context": "https://schema.org", "@type": "WebSite", "name": SITE["name"], "url": BASE + "/",
@@ -596,6 +617,18 @@ def main():
         path = "/pack/"
         prix, pay, gratuit = SITE["prix"], SITE["lien_paiement"], SITE["lignes_gratuites"]
         n_met, n_dep = len(deps_of), len(mets_of)
+        # extrait gratuit : mêmes colonnes que les fichiers du pack, quelques lignes déjà visibles sur le site
+        ex_met = next(x for x in METIERS if x["slug"] in deps_of)
+        extrait_nom, extrait_fichier = ex_met["nom"], f"extrait-{ex_met['slug']}.csv"
+        ex_deps = sorted(sorted(deps_of[ex_met["slug"]], key=lambda x: -len(data[(ex_met["slug"], x)]["a_venir"]))[:EXTRAIT_DEPS])
+        extrait_n = 0
+        with open(os.path.join(out, extrait_fichier), "w", encoding="utf-8-sig", newline="") as f:
+            w = csv.writer(f, delimiter=";")
+            w.writerow(CSV_ENTETE)
+            for dep in ex_deps:
+                for r in data[(ex_met["slug"], dep)]["a_venir"][:EXTRAIT_LIGNES]:
+                    w.writerow(csv_ligne(dep, r))
+                    extrait_n += 1
         cta = f'<a class="btn" href="{esc(pay)}" rel="nofollow">Obtenir toutes les listes · {esc(prix)}</a>'
         atouts = [
             ("Toutes les échéances", f"{nb(tot_ech)} marchés qui se terminent dans les 18 mois, au lieu des "
@@ -628,6 +661,11 @@ def main():
         col_html = "".join(f"<li><span><b>{esc(c)}</b> : {esc(x)}</span></li>" for c, x in colonnes)
         faq = [
             ("Est-ce un abonnement ?", f"Non. Vous payez {prix} une seule fois, sans renouvellement automatique."),
+        ] + ([("Le prix va-t-il changer ?", PROMO + " Un achat fait au prix de lancement reste valable ensuite : "
+               "vous gardez l'accès aux fichiers mis à jour, sans rien payer de plus.")] if PROMO else []) + [
+            ("Puis-je voir un fichier avant d'acheter ?",
+             f"Oui. Un extrait gratuit du fichier « {extrait_nom} » est téléchargeable sur cette page : "
+             f"{extrait_n} lignes réelles, avec les mêmes colonnes que les fichiers du pack."),
             ("Que contient le pack exactement ?",
              f"Un fichier par métier ({n_met} métiers), couvrant {n_dep} départements, avec toutes les échéances "
              f"estimées dans les 18 mois : {nb(tot_ech)} marchés à ce jour. Pour chaque marché : objet, acheteur, "
@@ -659,15 +697,17 @@ def main():
 <div><b>{n_met}</b><span>métiers, un fichier chacun</span></div>
 <div><b>{n_dep}</b><span>départements</span></div>
 <div><b>{esc(prix)}</b><span>une seule fois</span></div></div>
-<p class="actions">{cta}</p>
+<p class="actions">{cta} <a class="btn ghost" href="/{extrait_fichier}" download>Télécharger un extrait gratuit</a></p>
+{f'<p class="promo">{esc(PROMO)}</p>' if PROMO else ""}
 </div></section>
 <div class="wrap">
 <section><h2>Ce que vous obtenez</h2><div class="steps">{atouts_html}</div></section>
 <section><h2>Le site gratuit et le pack, côte à côte</h2>{compare}</section>
 <section><h2>Ce qu'il y a dans chaque fichier</h2>
-<p class="hint">Une ligne par marché qui arrive à échéance.</p><ol class="rank">{col_html}</ol></section>
+<p class="hint">Une ligne par marché qui arrive à échéance.</p><ol class="rank">{col_html}</ol>
+<p>Jugez sur pièce : <a href="/{extrait_fichier}" download>téléchargez un extrait gratuit du fichier « {esc(extrait_nom)} »</a> ({extrait_n} lignes réelles, mêmes colonnes que les fichiers du pack).</p></section>
 <section><aside class="lock"><div><strong>{nb(tot_ech)} échéances, {n_met} métiers, {n_dep} départements.</strong>
-<p>Un seul paiement, sans abonnement. Fichiers mis à jour chaque jour.</p></div>{cta}</aside></section>
+<p>Un seul paiement, sans abonnement. Fichiers mis à jour chaque jour.{f' <b class="promo">{esc(PROMO)}</b>' if PROMO else ""}</p></div>{cta}</aside></section>
 <section><h2>Questions fréquentes</h2><div class="faq">{faq_html}</div></section>
 <section class="note"><h2>À savoir avant d'acheter</h2><p>Les échéances sont des estimations et rien ne garantit qu'un marché sera relancé à la date indiquée. Le détail est dans <a href="/methode/">la méthode</a>. Vous pouvez juger de la qualité des données sur les pages gratuites du site avant d'acheter.</p></section>
 </div>"""
@@ -720,13 +760,10 @@ def main():
             n = 0
             with open(full, "w", encoding="utf-8-sig", newline="") as f:
                 w = csv.writer(f, delimiter=";")
-                w.writerow(["Département", "Nom du département", "Objet du marché", "Acheteur", "Titulaire(s)",
-                            "Montant (€)", "Date de notification", "Durée (mois)", "Échéance estimée"])
+                w.writerow(CSV_ENTETE)
                 for dep in sorted(deps_of[ms]):
                     for r in data[(ms, dep)]["a_venir"]:
-                        w.writerow([dep, DEPARTEMENTS[dep], short(r[1], 400), r[2] or "", r[3] or "",
-                                    "" if not r[4] or r[4] <= 0 else round(r[4]), fr_date(r[5]), r[6],
-                                    r[7].strftime("%d/%m/%Y")])
+                        w.writerow(csv_ligne(dep, r))
                         n += 1
             liens += (f'<a class="card" href="{ms}.csv" download><strong>{esc(met["nom"])}</strong>'
                       f"<span><b>{nb(n)}</b> échéances · fichier CSV pour Excel</span></a>")

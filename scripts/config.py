@@ -8,6 +8,12 @@ SITE = {
     "prix": "29 € HT",
     # Lien de paiement unique (pack de toutes les listes). Vide tant que le compte de paiement n'existe pas.
     "lien_paiement": "https://buy.stripe.com/5kQ8wP9ZueLD2fu38Y3gk01",
+    # Prix de lancement : jusqu'à "lancement_fin" inclus, le site annonce que le prix passera ensuite à "prix_apres".
+    # Après cette date, le site bascule tout seul sur "prix_apres" et "lien_paiement_apres" si ce lien est renseigné
+    # (lien de paiement Stripe au nouveau prix) ; sinon il garde le prix et le lien actuels, sans annonce.
+    "lancement_fin": "2026-12-31",
+    "prix_apres": "39 € HT",
+    "lien_paiement_apres": "",
     "editeur": {
         "nom": "Pierre Redon",
         "statut": "entrepreneur individuel",
