@@ -101,7 +101,21 @@ def connexion(host, contact, mdp):
         except (smtplib.SMTPServerDisconnected, OSError) as e:
             derniere = e
             print(f"Port {port} : connexion coupée ({type(e).__name__})")
-    raise SystemExit(f"Gmail a coupé la connexion sur les deux ports ({derniere}).")
+    # dernier recours et diagnostic : identification « LOGIN » pas à pas (aucun secret n'est affiché)
+    try:
+        smtp = smtplib.SMTP_SSL(host, 465, timeout=30)
+        smtp.ehlo()
+        print("Méthodes proposées par le serveur :", smtp.esmtp_features.get("auth", "aucune"),
+              "| nom annoncé :", "." in smtp.local_hostname and "nom complet" or smtp.local_hostname)
+        smtp.user, smtp.password = contact, mdp
+        code, rep = smtp.auth("LOGIN", smtp.auth_login, initial_response_ok=False)
+        print("Identification LOGIN acceptée :", code)
+        return smtp
+    except smtplib.SMTPAuthenticationError as e:
+        raise SystemExit(f"Gmail a refusé la connexion (code {e.smtp_code}) : le mot de passe d'application est "
+                         "faux, révoqué, ou n'appartient pas au compte de l'adresse de contact.")
+    except (smtplib.SMTPException, OSError) as e:
+        raise SystemExit(f"Gmail a coupé la connexion à chaque essai ({type(e).__name__} : {e}).")
 
 
 def main():
