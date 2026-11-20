@@ -63,6 +63,9 @@ if _fin and SITE.get("prix_apres"):
         PROMO_CD = (f'<span class="cd" data-fin="{_cible}">jusqu\'au {PROMO_FIN} {_fin.year}</span>')
     elif SITE.get("lien_paiement_apres"):
         SITE["prix"], SITE["lien_paiement"] = SITE["prix_apres"], SITE["lien_paiement_apres"]
+APERCU_LIGNES = 5  # lignes suivantes montrées en aperçu masqué sur chaque page
+RASSURE = (f'<p class="rassure">Paiement sécurisé par Stripe · paiement unique, sans abonnement · '
+           f'une question avant d\'acheter ? {html.escape(SITE["editeur"]["contact"])}</p>')
 EXTRAIT_DEPS, EXTRAIT_LIGNES = 10, 3  # extrait gratuit : 3 échéances dans 10 départements
 NAV_PACK = ""  # lien « Le pack » du menu, renseigné seulement si la vente est active
 FILTER_JS = ("var v=this.value.toLowerCase();document.querySelectorAll('.dep')"
@@ -251,9 +254,10 @@ def page(title, description, body, path, extra_head="", robots="index,follow", p
 """
 
 
-def table(headers, rows, cls=""):
+def table(headers, rows, cls="", lock_from=None):
+    """lock_from : indice à partir duquel les lignes sont des aperçus réservés au pack (classe « lk »)."""
     th = "".join(f'<th scope="col">{esc(h)}</th>' for h in headers)
-    trs = "".join("<tr>" + "".join(f'<td data-l="{esc(h)}">{c}</td>' for h, c in zip(headers, r)) + "</tr>" for r in rows)
+    trs = "".join(('<tr class="lk">' if lock_from is not None and i >= lock_from else "<tr>") + "".join(f'<td data-l="{esc(h)}">{c}</td>' for h, c in zip(headers, r)) + "</tr>" for i, r in enumerate(rows))
     return f'<div class="tbl {cls}"><table><thead><tr>{th}</tr></thead><tbody>{trs}</tbody></table></div>'
 
 
@@ -419,13 +423,18 @@ def main():
                            f"la prochaine en {fr_month(a_venir[0][7])}.")
         intro = " ".join(esc(p) for p in phrases)
 
+        pay = SITE.get("lien_paiement") if vente_active else None
+        # aperçu des lignes suivantes : échéance, montant et durée visibles, acheteur et titulaire réservés au pack
+        apercu = a_venir[len(free):len(free) + APERCU_LIGNES] if pay else []
+        masque = '<span class="mask">dans le pack</span>'
         if free:
             t1 = table(["Objet du marché", "Acheteur", "Titulaire actuel", "Montant", "Durée", "Échéance estimée"],
                        [[esc(short(r[1])), esc(r[2]), esc(titulaires_txt(r[3])), euro(r[4]), f"{r[6]} mois",
-                         f'<span class="pill">{fr_month(r[7])}</span>'] for r in free], "ech")
+                         f'<span class="pill">{fr_month(r[7])}</span>'] for r in free]
+                       + [[masque, masque, masque, euro(r[4]), f"{r[6]} mois",
+                           f'<span class="pill">{fr_month(r[7])}</span>'] for r in apercu], "ech", lock_from=len(free))
         else:
             t1 = '<p class="empty">Aucune échéance estimée dans les 18 mois d\'après les données publiées.</p>'
-        pay = SITE.get("lien_paiement") if vente_active else None
         more = ""
         if reste > 0:
             if pay:
@@ -440,7 +449,7 @@ def main():
                     "Paiement unique, fichiers mis à jour chaque jour."
                     + (' <a href="/pack/">Voir ce que contient le pack</a>' if pay else "")
                     + (f' <b class="promo">{esc(PROMO)}</b> <span class="cdbox">{PROMO_CD}</span>' if pay and PROMO else "") + "</p></div>"
-                    f"{cta}</aside>")
+                    f"{cta}</aside>" + (RASSURE if pay else ""))
         t2 = table(["Objet du marché", "Acheteur", "Titulaire", "Montant", "Notifié le"],
                    [[esc(short(r[1])), esc(r[2]), esc(titulaires_txt(r[3])), euro(r[4]), fr_date(r[5])] for r in lst[:20]])
         li_tit = "".join(f"<li><span>{esc(n)}</span><b>{c}</b></li>" for n, c in top_tit)
@@ -610,7 +619,7 @@ def main():
                  '<a href="/pack/">Voir ce que contient le pack</a>'
                  + (f' <b class="promo">{esc(PROMO)}</b> <span class="cdbox">{PROMO_CD}</span>' if PROMO else "") + '</p></div>'
                  f'<a class="btn" href="{esc(SITE["lien_paiement"])}" rel="nofollow">Obtenir toutes les listes · '
-                 f'{esc(SITE["prix"])}</a></aside></section>')
+                 f'{esc(SITE["prix"])}</a></aside>{RASSURE}</section>')
     head = jsonld({"@context": "https://schema.org", "@type": "WebSite", "name": SITE["name"], "url": BASE + "/",
                    "description": SITE["baseline"], "inLanguage": "fr-FR"})
     body = f"""<section class="hero"><div class="wrap">
@@ -734,7 +743,7 @@ def main():
 <p class="hint">Une ligne par marché qui arrive à échéance.</p><ol class="rank">{col_html}</ol>
 <p>Jugez sur pièce : <a href="/{extrait_fichier}" download>téléchargez un extrait gratuit du fichier « {esc(extrait_nom)} »</a> ({extrait_n} lignes réelles, mêmes colonnes que les fichiers du pack).</p></section>
 <section><aside class="lock"><div><strong>{nb(tot_ech)} échéances, {n_met} métiers, {n_dep} départements.</strong>
-<p>Un seul paiement, sans abonnement. Fichiers mis à jour chaque jour.{f' <b class="promo">{esc(PROMO)}</b>' if PROMO else ""}</p></div>{cta}</aside></section>
+<p>Un seul paiement, sans abonnement. Fichiers mis à jour chaque jour.{f' <b class="promo">{esc(PROMO)}</b>' if PROMO else ""}</p></div>{cta}</aside>{RASSURE}</section>
 <section><h2>Questions fréquentes</h2><div class="faq">{faq_html}</div></section>
 <section class="note"><h2>À savoir avant d'acheter</h2><p>Les échéances sont des estimations et rien ne garantit qu'un marché sera relancé à la date indiquée. Le détail est dans <a href="/methode/">la méthode</a>. Vous pouvez juger de la qualité des données sur les pages gratuites du site avant d'acheter.</p></section>
 </div>"""

@@ -102,3 +102,7 @@ p.promo{margin:10px 0 0}
 html,body{overflow-x:clip}
 .promobar .c{display:none}
 @media(max-width:640px){.promobar{padding:7px 10px;font-size:.88rem;gap:4px 10px}.promobar .l{display:none}.promobar .c{display:inline}}
+tr.lk td{background:#faf8f3}
+.mask{display:inline-block;background:var(--line);color:var(--muted);border-radius:6px;padding:2px 9px;font-size:.82rem;white-space:nowrap}
+.rassure{margin:10px 0 0;color:var(--muted);font-size:.9rem}
+@media(max-width:720px){tr.lk~tr.lk~tr.lk{display:none}}
