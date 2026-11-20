@@ -129,3 +129,7 @@ tr.lk td{background:#faf8f3}
 .packhome .actions{margin-top:20px}
 .packhome .buy{box-shadow:0 10px 30px rgba(0,0,0,.3)}
 @media(max-width:860px){.packhome{grid-template-columns:1fr;gap:22px;padding:22px 18px}}
+.keep{background:var(--amber-bg);border:1px solid #f0d9a0;border-radius:var(--r);padding:20px 22px}
+.keep .actions{margin:14px 0 10px}
+.keep .hint{margin:0}
+.btn.alt{background:#fff;border-color:var(--navy);cursor:pointer;font:inherit;font-weight:700}

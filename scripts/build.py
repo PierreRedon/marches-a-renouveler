@@ -16,6 +16,7 @@ import re
 import shutil
 import sys
 
+from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
 import duckdb
@@ -818,9 +819,18 @@ def main():
                         n += 1
             liens += (f'<a class="card" href="{ms}.csv" download><strong>{esc(met["nom"])}</strong>'
                       f"<span><b>{nb(n)}</b> échéances · fichier CSV pour Excel</span></a>")
+        url_acces = BASE + base_acces
+        mailto = ("mailto:?subject=" + quote(f"Mes listes {SITE['name']} : page de téléchargement")
+                  + "&body=" + quote("Page de téléchargement des listes (fichiers mis à jour chaque jour) :\n"
+                                     + url_acces + "\n\nAdresse personnelle, à ne pas diffuser."))
+        copier = ("navigator.clipboard.writeText(location.href).then(()=>{this.textContent='Adresse copiée'})")
+        garder = f"""<section class="keep"><h2>Gardez cette page pour revenir demain</h2>
+<p>Les fichiers sont mis à jour chaque jour, toujours à cette adresse. Vous n'avez rien à repayer : il suffit de revenir ici. Enregistrez l'adresse maintenant, de l'une de ces façons :</p>
+<p class="actions"><a class="btn" href="{esc(mailto)}">Me l'envoyer par e-mail</a> <button class="btn alt" type="button" onclick="{copier}">Copier l'adresse</button></p>
+<p class="hint">Ou ajoutez la page à vos favoris : Ctrl + D (Cmd + D sur Mac). Adresse perdue ? Écrivez à {esc(SITE['editeur']['contact'])} avec l'e-mail utilisé lors du paiement.</p></section>"""
         acces = f"""<section class="hero small"><div class="wrap"><h1>Vos listes complètes</h1>
 <p class="lead">Merci pour votre achat. Gardez l'adresse de cette page : les fichiers y sont mis à jour chaque jour. Dernière mise à jour : {fr_date(TODAY)}.</p></div></section>
-<div class="wrap"><section><h2>Téléchargez un fichier par métier</h2><div class="cards">{liens}</div></section>
+<div class="wrap">{garder}<section><h2>Téléchargez un fichier par métier</h2><div class="cards">{liens}</div></section>
 <section class="note"><h2>À savoir</h2><p>Chaque fichier contient tous les départements : filtrez la première colonne dans Excel. Les échéances sont des estimations, voir <a href="/methode/">la méthode</a>. Un problème ? Écrivez à {esc(SITE['editeur']['contact'])}.</p></section></div>"""
         write(out, base_acces, page("Vos listes complètes | " + SITE["name"], "Accès aux listes complètes.",
                                     acces, base_acces, robots="noindex,nofollow", promo=False))
