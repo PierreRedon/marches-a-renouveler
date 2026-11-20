@@ -1,0 +1,45 @@
+name: Envoyer l'accès aux acheteurs
+
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+    inputs:
+      essai:
+        description: "Essai : n'écrit à aucun acheteur, envoie un message d'essai à l'adresse de contact"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: acces
+  cancel-in-progress: false
+
+jobs:
+  envoyer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Reprendre l'état des envois
+        uses: actions/cache/restore@v4
+        with:
+          path: etat_acces.json
+          key: acces-etat-${{ github.run_id }}
+          restore-keys: acces-etat-
+      - name: Envoyer les accès
+        env:
+          STRIPE_KEY: ${{ secrets.STRIPE_KEY }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          LIST_TOKEN: ${{ secrets.LIST_TOKEN }}
+        run: python scripts/send_access.py --etat etat_acces.json ${{ (github.event_name == 'workflow_dispatch' && inputs.essai) && '--essai' || '' }}
+      - name: Enregistrer l'état des envois
+        if: always() && hashFiles('etat_acces.json') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: etat_acces.json
+          key: acces-etat-${{ github.run_id }}
