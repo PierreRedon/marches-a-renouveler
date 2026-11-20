@@ -340,6 +340,12 @@ def main():
     if vente_active:
         global NAV_PACK
         NAV_PACK = '<a class="navpack" href="/pack/">Le pack</a>'
+        if PROMO:
+            global TOP_PROMO
+            TOP_PROMO = (f'<a class="promobar" href="/pack/"><b class="l">Prix de lancement</b> <span class="c"><b>Pack {esc(SITE["prix"])}</b>, puis '
+                         f'{esc(SITE["prix_apres"])}</span> <span class="l">Le pack complet à '
+                         f'<b>{esc(SITE["prix"])}</b>, puis {esc(SITE["prix_apres"])} après le {PROMO_FIN}</span> '
+                         f'<em>{PROMO_CD}</em> <u>Voir le pack</u></a>')
 
     # ---------- 1re passe : calcul ----------
     data = {}
@@ -595,7 +601,7 @@ def main():
     offre = btn_pack = ""
     if vente_active:
         btn_pack = (f' <a class="btn ghost{" or" if PROMO else ""}" href="/pack/">Le pack complet · {esc(SITE["prix"])}'
-                    + (f" jusqu'au {PROMO_FIN}" if PROMO else "") + "</a>")
+                    + (f" · {PROMO_CD}" if PROMO else "") + "</a>")
         offre = ('<section id="pack"><h2>Toutes les échéances dans des fichiers Excel</h2>'
                  f'<aside class="lock"><div><strong>Les pages du site montrent les {SITE["lignes_gratuites"]} prochaines '
                  f'échéances de chaque métier et département. Le pack contient les {nb(tot_ech)}.</strong>'

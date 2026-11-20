@@ -96,3 +96,9 @@ p.promo{margin:10px 0 0}
 .cdbox{display:inline-block;background:var(--amber);color:var(--navy);border-radius:8px;padding:3px 10px;margin-left:6px;font-variant-numeric:tabular-nums}
 .btn.ghost.or{border-color:var(--amber);color:var(--amber)}
 [hidden]{display:none!important}
+.promobar{position:sticky;top:0;z-index:50;box-shadow:0 1px 6px rgba(0,0,0,.18)}
+.btn .cd{font-variant-numeric:tabular-nums}
+.promobar~.top{position:static}
+html,body{overflow-x:clip}
+.promobar .c{display:none}
+@media(max-width:640px){.promobar{padding:7px 10px;font-size:.88rem;gap:4px 10px}.promobar .l{display:none}.promobar .c{display:inline}}
