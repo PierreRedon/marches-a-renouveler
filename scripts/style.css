@@ -98,7 +98,6 @@ p.promo{margin:10px 0 0}
 [hidden]{display:none!important}
 .promobar{position:sticky;top:0;z-index:50;box-shadow:0 1px 6px rgba(0,0,0,.18)}
 .btn .cd{font-variant-numeric:tabular-nums}
-.promobar~.top{position:static}
 html,body{overflow-x:clip}
 .promobar .c{display:none}
 @media(max-width:640px){.promobar{padding:7px 10px;font-size:.88rem;gap:4px 10px}.promobar .l{display:none}.promobar .c{display:inline}}
@@ -133,3 +132,6 @@ tr.lk td{background:#faf8f3}
 .keep .actions{margin:14px 0 10px}
 .keep .hint{margin:0}
 .btn.alt{background:#fff;border-color:var(--navy);cursor:pointer;font:inherit;font-weight:700}
+body:has(>.promobar){display:flex;flex-direction:column}
+body:has(>.promobar)>.promobar{order:-1}
+body:has(>.promobar)>.top{position:static}

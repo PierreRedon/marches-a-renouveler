@@ -239,7 +239,6 @@ def page(title, description, body, path, extra_head="", robots="index,follow", p
 </head>
 <body>
 <a class="skip" href="#contenu">Aller au contenu</a>
-{bandeau}
 <header class="top"><div class="wrap">
 <a class="brand" href="/"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7"/><path d="M8 21l5-6 4 4 7-9" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Marchés <b>à renouveler</b></span></a>
 <nav><a href="/#metiers">Métiers</a><a href="/departements/">Départements</a><a href="/methode/">Méthode</a>{NAV_PACK}</nav>
@@ -252,6 +251,7 @@ def page(title, description, body, path, extra_head="", robots="index,follow", p
 <div><p><a href="/methode/">Méthode et limites</a><br><a href="/departements/">Tous les départements</a><br><a href="/mentions-legales/">Mentions légales</a></p></div>
 <div><p>Source : données essentielles de la commande publique consolidées, data.gouv.fr, Licence Ouverte 2.0.<br>Dernière mise à jour : {fr_date(TODAY)}. Les échéances sont des estimations.</p></div>
 </div></footer>
+{bandeau}
 {script}
 </body>
 </html>
@@ -350,7 +350,7 @@ def main():
         NAV_PACK = '<a class="navpack" href="/pack/">Le pack</a>'
         if PROMO:
             global TOP_PROMO
-            TOP_PROMO = (f'<a class="promobar" href="/pack/"><b class="l">Prix de lancement</b> <span class="c"><b>Pack {esc(SITE["prix"])}</b>, puis '
+            TOP_PROMO = (f'<a class="promobar" data-nosnippet href="/pack/"><b class="l">Prix de lancement</b> <span class="c"><b>Pack {esc(SITE["prix"])}</b>, puis '
                          f'{esc(SITE["prix_apres"])}</span> <span class="l">Le pack complet à '
                          f'<b>{esc(SITE["prix"])}</b>, puis {esc(SITE["prix_apres"])} après le {PROMO_FIN}</span> '
                          f'<em>{PROMO_CD}</em> <u>Voir le pack</u></a>')
@@ -430,7 +430,7 @@ def main():
         pay = SITE.get("lien_paiement") if vente_active else None
         # aperçu des lignes suivantes : échéance, montant et durée visibles, acheteur et titulaire réservés au pack
         apercu = a_venir[len(free):len(free) + APERCU_LIGNES] if pay else []
-        masque = '<span class="mask">dans le pack</span>'
+        masque = '<span class="mask" data-nosnippet>dans le pack</span>'
         if free:
             t1 = table(["Objet du marché", "Acheteur", "Titulaire actuel", "Montant", "Durée", "Échéance estimée"],
                        [[esc(short(r[1])), esc(r[2]), esc(titulaires_txt(r[3])), euro(r[4]), f"{r[6]} mois",
