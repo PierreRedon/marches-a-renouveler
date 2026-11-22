@@ -1,6 +1,6 @@
 {
- "genere_le": "2026-11-21T13:32:00Z",
- "lignes": 3401732,
+ "genere_le": "2026-11-22T09:40:54Z",
+ "lignes": 3403651,
  "colonnes": [
   {
    "nom": "uid",
@@ -286,7 +286,7 @@
  "site": {
   "pages_metier_departement": 2491,
   "urls": 2621,
-  "echeances": 137610,
+  "echeances": 137513,
   "metiers": 25,
   "departements": 101,
   "vente_active": true
