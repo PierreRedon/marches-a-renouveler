@@ -72,6 +72,8 @@ METIERS = [
      "intro": "Développement, maintenance et hébergement informatiques : marchés attribués et échéances à venir, département par département."},
     {"slug": "denrees-alimentaires", "nom": "Denrées alimentaires", "nom_court": "denrées alimentaires", "cpv": ["15", "0322"],
      "intro": "Fourniture de denrées alimentaires, épicerie, produits frais et surgelés : marchés attribués et échéances à venir, département par département."},
+    {"slug": "impression", "nom": "Impression et reprographie", "nom_court": "impression", "cpv": ["798"],
+     "intro": "Services d'impression, de reprographie et de finition : marchés attribués et échéances à venir, département par département."},
     {"slug": "fournitures-de-bureau", "nom": "Fournitures de bureau", "nom_court": "fournitures de bureau", "cpv": ["3019"],
      "intro": "Fournitures et petit matériel de bureau : marchés attribués et échéances à venir, département par département."},
 ]
